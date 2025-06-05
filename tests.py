@@ -1,24 +1,74 @@
-from main import BooksCollector
+from main import BooksCollector                        
+import pytest
+from fixtures import collector, populated_collector
 
-# класс TestBooksCollector объединяет набор тестов, которыми мы покрываем наше приложение BooksCollector
-# обязательно указывать префикс Test
 class TestBooksCollector:
+    # Тесты для add_new_book
+    def test_add_new_book_empty_title(self, collector):
+        collector.add_new_book('')
+        assert len(collector.books_genre) == 0
 
-    # пример теста:
-    # обязательно указывать префикс test_
-    # дальше идет название метода, который тестируем add_new_book_
-    # затем, что тестируем add_two_books - добавление двух книг
-    def test_add_new_book_add_two_books(self):
-        # создаем экземпляр (объект) класса BooksCollector
-        collector = BooksCollector()
+    def test_add_new_book_too_long_title(self, collector):
+        collector.add_new_book('a' * 41)
+        assert len(collector.books_genre) == 0
 
-        # добавляем две книги
-        collector.add_new_book('Гордость и предубеждение и зомби')
-        collector.add_new_book('Что делать, если ваш кот хочет вас убить')
+    def test_add_new_book_max_length(self, collector):
+        collector.add_new_book('a' * 40)
+        assert len(collector.books_genre) == 1
 
-        # проверяем, что добавилось именно две
-        # словарь books_rating, который нам возвращает метод get_books_rating, имеет длину 2
-        assert len(collector.get_books_rating()) == 2
+    def test_add_new_book_duplicate(self, collector):
+        collector.add_new_book('Книга')
+        collector.add_new_book('Книга')
+        assert len(collector.books_genre) == 1
 
-    # напиши свои тесты ниже
-    # чтобы тесты были независимыми в каждом из них создавай отдельный экземпляр класса BooksCollector()
+    # Параметризация для add_new_book
+    @pytest.mark.parametrize("title, expected_length", [
+        ('', 0),
+        ('a' * 41, 0),
+        ('a' * 40, 1),
+        ('Книга', 1),
+        ('Книга', 1)
+    ])
+    def test_add_new_book_parametrized(self, collector, title, expected_length):
+        collector.add_new_book(title)
+        assert len(collector.books_genre) == expected_length
+
+    # Тесты для set_book_genre
+    def test_set_book_genre_valid(self, collector):
+        collector.add_new_book('Книга')
+        collector.set_book_genre('Книга', 'Фантастика')
+        assert collector.get_book_genre('Книга') == 'Фантастика'
+
+    def test_set_book_genre_invalid_genre(self, collector):
+        collector.add_new_book('Книга')
+        collector.set_book_genre('Книга', 'Неизвестный жанр')
+        assert collector.get_book_genre('Книга') == ''
+
+    def test_set_book_genre_missing_book(self, collector):
+        collector.set_book_genre('НетВСписке', 'Фантастика')
+        assert collector.get_book_genre('НетВСписке') is None
+
+    # Параметризация для set_book_genre
+    @pytest.mark.parametrize("book_name, genre, expected_genre", [
+        ('Книга', 'Фантастика', 'Фантастика'),
+        ('Книга', 'Неизвестный жанр', ''),
+        ('НетВСписке', 'Фантастика', None)
+    ])
+    def test_set_book_genre_parametrized(self, collector, book_name, genre, expected_genre):
+        if book_name != 'НетВСписке':
+            collector.add_new_book(book_name)
+        collector.set_book_genre(book_name, genre)
+        assert collector.get_book_genre(book_name) == expected_genre
+
+    # Тесты для get_books_for_children
+    def test_get_books_for_children_valid(self, collector):
+        collector.add_new_book('Детская книга')
+        collector.set_book_genre('Детская книга', 'Мультфильмы')
+        assert 'Детская книга' in collector.get_books_for_children()
+
+    def test_get_books_for_children_invalid(self, collector):
+        collector.add_new_book('Детектив')
+        collector.set_book_genre('Детектив', 'Детективы')
+        assert 'Детектив' not in collector.get_books_for_children()
+
+
