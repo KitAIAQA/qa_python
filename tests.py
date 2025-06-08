@@ -54,11 +54,18 @@ class TestBooksCollector:
         ('Книга', 'Неизвестный жанр', ''),
         ('НетВСписке', 'Фантастика', None)
     ])
-    def test_set_book_genre_parametrized(self, collector, book_name, genre, expected_genre):
-        if book_name != 'НетВСписке':
-            collector.add_new_book(book_name)
-        collector.set_book_genre(book_name, genre)
-        assert collector.get_book_genre(book_name) == expected_genre
+    def test_set_book_genre(self):
+        # Проверяем успешное назначение жанра
+        self.collector.set_book_genre('Война и мир', 'Фантастика')
+        self.assertEqual(self.collector.books_genre['Война и мир'], 'Фантастика')
+
+        # Проверяем назначение несуществующего жанра
+        self.collector.set_book_genre('Война и мир', 'Фэнтези')
+        self.assertIsNone(self.collector.books_genre['Война и мир'])
+
+        # Проверяем назначение жанра для несуществующей книги
+        self.collector.set_book_genre('1984', 'Фантастика')
+        self.assertNotIn('1984', self.collector.books_genre)
 
     # Тесты для get_books_for_children
     def test_get_books_for_children_valid(self, collector):
@@ -71,4 +78,75 @@ class TestBooksCollector:
         collector.set_book_genre('Детектив', 'Детективы')
         assert 'Детектив' not in collector.get_books_for_children()
 
+    def test_get_book_genre(self, populated_collector):
+        # Проверяем получение жанра существующей книги
+        book_name = "Гарри Поттер"
+        expected_genre = "Фантастика"
+        assert populated_collector.get_book_genre(book_name) == expected_genre
+
+        # Проверяем обработку несуществующей книги
+        book_name = "Неизвестная книга"
+        assert populated_collector.get_book_genre(book_name) is None
+
+        # Проверяем получение жанра для другой книги
+        book_name = "Оно"
+        expected_genre = "Ужасы"
+        assert populated_collector.get_book_genre(book_name) == expected_genre
+
+    # Проверка get_books_with_specific_genre
+    def test_get_books_with_specific_genre(self, populated_collector):
+        collector.add_new_book("Книга1")  # добавляем первую книгу
+        collector.add_new_book("Книга2")  # добавляем вторую книгу
+        collector.set_book_genre("Книга1", "Фантастика")  # устанавливаем жанр
+        collector.set_book_genre
+
+    def test_get_books_genre(self, populated_collector):
+        expected_dict = {
+            "Война и мир": "Фантастика",
+            "Гарри Поттер": "Фантастика",
+            "Преступление и наказание": "Детективы",
+            "12 стульев": "Комедии",
+            "Оно": "Ужасы"
+        }
+
+        result_dict = populated_collector.get_books_genre()
+
+        self.assertEqual(result_dict, expected_dict)
+        self.assertEqual(populated_collector.books_genre, expected_dict)
+
+        populated_collector.books_genre = {}
+        self.assertDictEqual(populated_collector.get_books_genre(), {})
+
+        # Тесты для favorites
+    def test_add_book_in_favorites_valid(self, collector):
+        # Добавляем книгу в избранное
+        collector.add_new_book('Книга')
+        collector.add_book_in_favorites('Книга')
+        # Проверяем, что книга есть в избранном
+        assert 'Книга' in collector.get_list_of_favorites_books()
+
+    def test_delete_from_favorites(self, collector):
+        collector.add_new_book("Книга")  # добавляем книгу
+        collector.add_book_in_favorites("Книга")  # добавляем в избранное
+        collector.delete_book_from_favorites("Книга")  # удаляем из избранного
+        # проверяем, что книга удалена
+        assert "Книга" not in collector.get_list_of_favorites_books()
+
+    def test_get_list_of_favorites_books(self, collector):
+        # Добавляем несколько книг в избранное
+        collector.favorites.extend(["Война и мир", "Преступление и наказание", "Гарри Поттер"])
+
+        # Получаем список избранных книг
+        favorites_list = collector.get_list_of_favorites_books()
+
+        # Проверяем, что метод возвращает список
+        assert isinstance(favorites_list, list)
+
+        # Проверяем, что все добавленные книги присутствуют в списке
+        assert "Война и мир" in favorites_list
+        assert "Преступление и наказание" in favorites_list
+        assert "Гарри Поттер" in favorites_list
+
+        # Проверяем длину списка
+        assert len(favorites_list) == 3
 
