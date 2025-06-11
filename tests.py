@@ -98,7 +98,17 @@ class TestBooksCollector:
         collector.add_new_book("Книга1")  # добавляем первую книгу
         collector.add_new_book("Книга2")  # добавляем вторую книгу
         collector.set_book_genre("Книга1", "Фантастика")  # устанавливаем жанр
-        collector.set_book_genre
+        collector.set_book_genre("Книга2", "Фантастика")  # добавляем второй жанр
+
+        # Проверяем получение книг определенного жанра
+        books_list = collector.get_books_with_specific_genre("Фантастика")
+
+        # Добавляем финальные assert'ы
+        self.assertIsInstance(books_list, list)  # Проверяем, что возвращен список
+        self.assertEqual(len(books_list), 2)  # Проверяем количество книг
+        self.assertIn("Книга1", books_list)  # Проверяем наличие первой книги
+        self.assertIn("Книга2", books_list)  # Проверяем наличие второй книги
+        self.assertNotIn("Книга3", books_list)  # Проверяем отсутствие несуществующей книги
 
     def test_get_books_genre(self, populated_collector):
         expected_dict = {
